@@ -7,5 +7,5 @@ public enum ClientState {
     INIT,
     INTRO,
     BYE,
-    TERMINATE, PLAYER_SELECT
+    TERMINATE, GAME_STARTED, PLAY, PLAYER_SELECT
 }

@@ -18,9 +18,9 @@ public class ClientHandler extends Thread {
     private Socket socket;
 
 
-    public ClientHandler(Socket socket) {
+    public ClientHandler(Socket socket, XoServer xoServer) {
         this.socket = socket;
-        serverProtocol = new ServerProtocol();
+        serverProtocol = new ServerProtocol(xoServer);
     }
 
     @Override
@@ -32,9 +32,11 @@ public class ClientHandler extends Thread {
                 String line = reader.readLine();
                 log.debug("Received message from client [{}]", line);
                 String message = serverProtocol.processMessage(line);
-                log.debug("Going to send message [{}]", message);
-                writer.write(message + "\n");
-                writer.flush();
+                if (message != null) {
+                    log.debug("Going to send message [{}]", message);
+                    writer.write(message + "\n");
+                    writer.flush();
+                }
             }
         } catch (IOException e) {
             e.printStackTrace();

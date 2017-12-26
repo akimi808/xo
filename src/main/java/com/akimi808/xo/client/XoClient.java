@@ -41,11 +41,13 @@ public class XoClient {
             String line = null;
             while (!clientProtocol.getClientState().equals(ClientState.TERMINATE)) {
                 String message = clientProtocol.processMessage(line);
-                log.debug("Going to send [{}]", message);
-                writer.write(message + "\n");
-                writer.flush();
-                line = reader.readLine();
-                log.debug("Received [{}]", line);
+                if (message != null) {
+                    log.debug("Going to send [{}]", message);
+                    writer.write(message + "\n");
+                    writer.flush();
+                    line = reader.readLine();
+                    log.debug("Received [{}]", line);
+                }
             }
         } catch (IOException e) {
             e.printStackTrace();

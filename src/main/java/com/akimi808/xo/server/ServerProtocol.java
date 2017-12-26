@@ -1,6 +1,5 @@
 package com.akimi808.xo.server;
 
-import com.akimi808.xo.client.XoClient;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -9,20 +8,90 @@ import org.apache.logging.log4j.Logger;
  */
 public class ServerProtocol {
     private static final Logger log = LogManager.getLogger(ServerProtocol.class);
-    public ServerState serverState = ServerState.INIT;
+    public ServerState serverState = ServerState.INTRO;
+    public final XoServer xoServer;
+    private Game game;
+    private Player player;
 
+    public ServerProtocol(XoServer xoServer) {
+        this.xoServer = xoServer;
+    }
 
 
     public String processMessage(String line) {
-        if ("Client/XO game".equals(line)) {
-            return "Server/XO game";
-        } else if (line.startsWith("Player's name")) {
-            return "No players";
-        } else if ("Bye".equals(line)) {
-            serverState = ServerState.TERMINATE;
-            return "Bye";
+        switch (serverState) {
+            case INTRO:
+                if ("Client/XO game".equals(line)) {
+                    serverState = ServerState.PLAYERS_LIST;
+                    return "Server/XO game";
+                } else {
+                    return "Unexpected message";
+                }
+            case PLAYERS_LIST:
+                if (line.startsWith("Player's name")) {
+                    String name = extractPlayerName(line);
+                    player = new Player(name);
+                    game = xoServer.registerNewPlayer(player);
+                    if (!game.hasSecondPlayer()) {
+                        return "No players";
+                    } else {
+                        serverState = ServerState.GAME_STARTED;
+                        return "Game started with" + game.getSecondPlayersName();
+                    }
+                } else if (line.equals("Waiting")) {
+                    if (!game.hasSecondPlayer()) {
+                        return "No players";
+                    } else {
+                        serverState = ServerState.GAME_STARTED;
+                        return "Game started with" + game.getSecondPlayersName();
+                    }
+                } else {
+                    return "Unexpected message";
+                }
+            case GAME_STARTED:
+                if ("Ready to play".equals(line)) {
+                    if (game.choseXplayer().equals(player)) {
+                        serverState = ServerState.PLAY;
+                        return "Your turn";
+                    } else {
+                        serverState = ServerState.PLAY;
+                        return "Not your turn";
+                    }
+                } else {
+                    return "Unexpected message";
+                }
+            case PLAY:
+                if ("Waiting for".equals(line)) {
+                    if (game.isPlayersMove(player)) {
+                        return "Your move";
+                    } else {
+                        return "Not your turn";
+                    }
+                } else if (line.startsWith("My move:")) {
+                    int move = extractPlayersMove(line);
+                    game.processMove(move);
+                    return "";
+                } else {
+                    return "Unexpected message";
+                }
+            case BYE:
+                if ("Bye".equals(line)) {
+                    serverState = serverState.TERMINATE;
+                    return "Bye";
+                } else {
+                    return "Unexpected message";
+                }
         }
-        return "Bye";
+        return null;
+    }
+
+    private int extractPlayersMove(String line) {
+        return Integer.parseInt(line.substring("My move".length() +1));
+    }
+
+
+    private String extractPlayerName(String message) {
+        return message.substring("Player's name".length() + 1);
     }
 
     public ServerState getServerState() {
