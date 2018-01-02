@@ -1,6 +1,5 @@
 package com.akimi808.xo.server;
 
-import org.omg.CORBA.DynAnyPackage.Invalid;
 
 import java.util.HashMap;
 import java.util.Random;
@@ -47,14 +46,42 @@ public class Game {
 
     public MoveResult processMove(int move, Player player) {
         if (isMovePosible(move)) {
-            //TODO: process move
             field.put(move, player.getType());
-            turn = turn.opposite();
+            switch (getGameState()) {
+                case CONTINUE:
+                    turn = turn.opposite();
+                    return MoveResult.CHANGE_TURN;
+                case WON:
+                    return MoveResult.GAME_OVER;
+                case DRAW:
+                    break;
+            }
             // FIXME
-            return MoveResult.CHANGE_TURN;
+            return MoveResult.DRAW;
         } else {
             return MoveResult.INVALID_MOVE;
         }
+    }
+
+    public GameState getGameState() {
+        for (int i = 1; i <= 7; i += 3) {
+            if (field.get(i) == field.get(i + 1) & field.get(i + 1) == field.get(i + 2)) {
+                return GameState.WON;
+            }
+        }
+        for (int i = 1; i <= 3; i += 1) {
+            if (field.get(i) == field.get(i + 3) & field.get(i + 3) == field.get(i + 6))
+            {
+                return GameState.WON;
+            }
+        }
+        if (field.get(1) == field.get(5) & field.get(5) == field.get(9)) {
+            return GameState.WON;
+        }
+        if (field.get(3) == field.get(5) & field.get(5) == field.get(7)) {
+            return GameState.WON;
+        }
+        return field.size() == 9 ? GameState.DRAW : GameState.CONTINUE;
     }
 
     private boolean isMovePosible(int move) {

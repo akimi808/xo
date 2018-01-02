@@ -5,7 +5,5 @@ package com.akimi808.xo.server;
  */
 public enum MoveResult {
     CHANGE_TURN,
-    WON,
-    LOSE,
-    INVALID_MOVE;
+    INVALID_MOVE, GAME_OVER, DRAW;
 }

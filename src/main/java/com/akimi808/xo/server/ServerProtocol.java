@@ -52,24 +52,40 @@ public class ServerProtocol {
                 if ("Ready to play".equals(line)) {
                     if (game.choseXplayer().equals(player)) {
                         serverState = ServerState.PLAY;
-                        return "Your turn";
+                        return "Your turn, your figure is X";
                     } else {
                         serverState = ServerState.PLAY;
-                        return "Not your turn";
+                        return "Not your turn, your figure is O";
                     }
                 } else {
                     return "Unexpected message";
                 }
             case PLAY:
                 if ("Waiting for".equals(line)) {
-                    if (game.isPlayersMove(player)) {
+                    GameState gameState = game.getGameState();
+                    if (game.isPlayersMove(player) & gameState.equals(GameState.CONTINUE)) {
                         return "Your move";
+                    } else if (gameState.equals(GameState.WON)) {
+                        serverState = ServerState.BYE;
+                        return "You lose";
+                    } else if (gameState.equals(GameState.DRAW)) {
+                        serverState = ServerState.BYE;
+                        return "Draw";
                     } else {
                         return "Not your turn";
                     }
                 } else if (line.startsWith("My move:")) {
                     int move = extractPlayersMove(line);
-                    game.processMove(move);
+                    switch (game.processMove(move, player)) {
+                        case INVALID_MOVE:
+                            return "Change your move";
+                        case GAME_OVER:
+                            return "You won";
+                        case DRAW:
+                            return "Draw";
+                        case CHANGE_TURN:
+                            return "Not your turn";
+                    }
                     return "";
                 } else {
                     return "Unexpected message";
