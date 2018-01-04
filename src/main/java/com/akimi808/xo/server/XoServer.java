@@ -15,7 +15,7 @@ import java.util.List;
  */
 public class XoServer {
     private static final Logger log = LogManager.getLogger(XoServer.class);
-    private List<Game> gameList;
+    private List<Game> gameList = new ArrayList<>();
 
     public static void main(String[] args) {
         new XoServer().run();

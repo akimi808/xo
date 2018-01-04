@@ -36,14 +36,14 @@ public class ServerProtocol {
                         return "No players";
                     } else {
                         serverState = ServerState.GAME_STARTED;
-                        return "Game started with" + game.getSecondPlayersName();
+                        return "Game started with " + game.getAnotherPlayersName(player);
                     }
                 } else if (line.equals("Waiting")) {
                     if (!game.hasSecondPlayer()) {
                         return "No players";
                     } else {
                         serverState = ServerState.GAME_STARTED;
-                        return "Game started with" + game.getSecondPlayersName();
+                        return "Game started with " + game.getAnotherPlayersName(player);
                     }
                 } else {
                     return "Unexpected message";
@@ -92,7 +92,7 @@ public class ServerProtocol {
                 }
             case BYE:
                 if ("Bye".equals(line)) {
-                    serverState = serverState.TERMINATE;
+                    serverState = ServerState.TERMINATE;
                     return "Bye";
                 } else {
                     return "Unexpected message";
@@ -102,7 +102,7 @@ public class ServerProtocol {
     }
 
     private int extractPlayersMove(String line) {
-        return Integer.parseInt(line.substring("My move".length() +1));
+        return Integer.parseInt(line.substring("My move ".length() + 1));
     }
 
 

@@ -87,4 +87,12 @@ public class Game {
     private boolean isMovePosible(int move) {
         return !(move < 1 || move > 9 || field.containsKey(move));
     }
+
+    public String getAnotherPlayersName(Player another) {
+        if (firstPlayer.equals(another)) {
+           return secondPlayer.getName();
+        } else {
+            return firstPlayer.getName();
+        }
+    }
 }

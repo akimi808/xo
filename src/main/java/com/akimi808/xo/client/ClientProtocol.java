@@ -1,6 +1,5 @@
 package com.akimi808.xo.client;
 
-import com.akimi808.xo.server.ServerProtocol;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -14,6 +13,11 @@ public class ClientProtocol {
     private static final Logger log = LogManager.getLogger(ClientProtocol.class);
     private final Random random = new Random();
     private ClientState clientState = ClientState.INIT;
+    private String playersName;
+
+    public ClientProtocol(String playersName) {
+        this.playersName = playersName;
+    }
 
     public String processMessage(String line) {
         switch (clientState) {
@@ -23,7 +27,7 @@ public class ClientProtocol {
             case INTRO:
                 if ("Server/XO game".equals(line)) {
                     clientState = ClientState.PLAYER_SELECT;
-                    return "Player's name Alice";
+                    return "Player's name " + playersName;
                 } else {
                     return  "Unexpected message";
                 }

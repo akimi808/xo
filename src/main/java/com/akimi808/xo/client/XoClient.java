@@ -1,6 +1,5 @@
 package com.akimi808.xo.client;
 
-import com.akimi808.xo.server.XoServer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -18,12 +17,12 @@ public class XoClient {
     private final ClientProtocol clientProtocol;
 
     public static void main(String[] args) {
-        new XoClient().run();
+        new XoClient(args[0]).run();
     }
 
 
-    public XoClient() {
-        clientProtocol = new ClientProtocol();
+    public XoClient(String name) {
+        clientProtocol = new ClientProtocol(name);
     }
 
     private void run() {
