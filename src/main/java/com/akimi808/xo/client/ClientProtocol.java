@@ -52,6 +52,11 @@ public class ClientProtocol {
                     return "My move: " + Integer.toString(1);
                 } else if (line.startsWith("Not your turn")) {
                     clientState = ClientState.PLAY;
+                    try {
+                        Thread.sleep(5000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
                     return "Waiting for";
                 } else {
                     return "Unexpected message";
@@ -60,6 +65,11 @@ public class ClientProtocol {
                 if (line.startsWith("Your move")) {
                     return "My move: " + Integer.toString(random.nextInt(10));
                 } else if (line.startsWith("Not your turn")) {
+                    try {
+                        Thread.sleep(5000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
                     return "Waiting for";
                 } else if (line.startsWith("Change your move")) {
                     return "My move: " + Integer.toString(random.nextInt(10));

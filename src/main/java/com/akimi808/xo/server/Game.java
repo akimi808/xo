@@ -15,10 +15,15 @@ public class Game {
 
     public Game(Player firstPlayer) {
        this.firstPlayer = firstPlayer;
+        Figure type = Figure.valueOf(new Random().nextInt(2));
+        firstPlayer.setType(type);
+
+
     }
 
     public void addSecondPlayer(Player player) {
         this.secondPlayer = player;
+        secondPlayer.setType(firstPlayer.getType().opposite());
     }
 
     public boolean hasSecondPlayer() {
@@ -30,10 +35,7 @@ public class Game {
     }
 
     public Player choseXplayer() {
-        Figure type = Figure.valueOf(new Random().nextInt(2));
-        firstPlayer.setType(type);
-        secondPlayer.setType(type.opposite());
-        if (type.equals(Figure.X)) {
+        if (firstPlayer.getType().equals(Figure.X)) {
             return firstPlayer;
         } else {
             return secondPlayer;
@@ -65,20 +67,20 @@ public class Game {
 
     public GameState getGameState() {
         for (int i = 1; i <= 7; i += 3) {
-            if (field.get(i) == field.get(i + 1) & field.get(i + 1) == field.get(i + 2)) {
+            if (field.get(i) != null && field.get(i) == field.get(i + 1) && field.get(i + 1) == field.get(i + 2)) {
                 return GameState.WON;
             }
         }
         for (int i = 1; i <= 3; i += 1) {
-            if (field.get(i) == field.get(i + 3) & field.get(i + 3) == field.get(i + 6))
+            if (field.get(i) != null && field.get(i) == field.get(i + 3) && field.get(i + 3) == field.get(i + 6))
             {
                 return GameState.WON;
             }
         }
-        if (field.get(1) == field.get(5) & field.get(5) == field.get(9)) {
+        if (field.get(1) != null && field.get(1) == field.get(5) && field.get(5) == field.get(9)) {
             return GameState.WON;
         }
-        if (field.get(3) == field.get(5) & field.get(5) == field.get(7)) {
+        if (field.get(3) != null && field.get(3) == field.get(5) && field.get(5) == field.get(7)) {
             return GameState.WON;
         }
         return field.size() == 9 ? GameState.DRAW : GameState.CONTINUE;

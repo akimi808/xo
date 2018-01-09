@@ -80,8 +80,10 @@ public class ServerProtocol {
                         case INVALID_MOVE:
                             return "Change your move";
                         case GAME_OVER:
-                            return "You won";
+                            serverState = ServerState.BYE;
+                            return "You won!";
                         case DRAW:
+                            serverState = ServerState.BYE;
                             return "Draw";
                         case CHANGE_TURN:
                             return "Not your turn";
