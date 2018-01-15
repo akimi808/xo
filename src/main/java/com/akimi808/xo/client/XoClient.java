@@ -26,40 +26,29 @@ public class XoClient {
     }
 
     private void run() {
-        Socket socket = null;
-        try {
-            socket = new Socket("localhost", 2810);
+        try (Socket socket = new Socket("localhost", 2810)) {
             log.debug("Connection established");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        try {
-            PrintWriter writer = new PrintWriter(socket.getOutputStream());
-            BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            String line = null;
-            while (!clientProtocol.getClientState().equals(ClientState.TERMINATE)) {
-                String message = clientProtocol.processMessage(line);
-                if (message != null) {
-                    log.debug("Going to send [{}]", message);
-                    writer.write(message + "\n");
-                    writer.flush();
-                    line = reader.readLine();
-                    log.debug("Received [{}]", line);
-                }
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        if (socket != null) {
             try {
-                socket.close();
+                PrintWriter writer = new PrintWriter(socket.getOutputStream());
+                BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                String line = null;
+                while (!clientProtocol.getClientState().equals(ClientState.TERMINATE)) {
+                    String message = clientProtocol.processMessage(line);
+                    if (message != null) {
+                        log.debug("Going to send [{}]", message);
+                        writer.write(message + "\n");
+                        writer.flush();
+                        line = reader.readLine();
+                        log.debug("Received [{}]", line);
+                    }
+                }
             } catch (IOException e) {
                 e.printStackTrace();
             }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-    }
 
+    }
 
 }

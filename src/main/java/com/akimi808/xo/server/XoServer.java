@@ -22,36 +22,24 @@ public class XoServer {
     }
 
     private void run() {
-        ServerSocket socket = null;
-        try {
-            socket = new ServerSocket(2810);
+        try (ServerSocket socket = new ServerSocket(2810)){
             log.debug("Socket created");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        // do job
-        try {
-            while (true) {
-                Socket socket1 = socket.accept();
-                new ClientHandler(socket1, this).start(); //ClientThread
-                log.debug("Thread created");
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-
-        if (socket != null) {
+            // do job
             try {
-                socket.close();
+                while (true) {
+                    Socket socket1 = socket.accept();
+                    new ClientHandler(socket1, this).start(); //ClientThread
+                    log.debug("Thread created");
+                }
             } catch (IOException e) {
                 e.printStackTrace();
             }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-
     }
 
-    public Game registerNewPlayer(Player player) {
+    public synchronized Game registerNewPlayer(Player player) {
         for (Game game : gameList) {
             if (!game.hasSecondPlayer()) {
                 game.addSecondPlayer(player);
