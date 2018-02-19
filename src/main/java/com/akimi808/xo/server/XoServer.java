@@ -3,12 +3,11 @@ package com.akimi808.xo.server;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.IOException;
-import java.net.ServerSocket;
-import java.net.Socket;
+import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
+import java.util.concurrent.ArrayBlockingQueue;
 
 /**
  * Created by akimi808 on 12/11/2017.
@@ -22,21 +21,9 @@ public class XoServer {
     }
 
     private void run() {
-        try (ServerSocket socket = new ServerSocket(2810)){
-            log.debug("Socket created");
-            // do job
-            try {
-                while (true) {
-                    Socket socket1 = socket.accept();
-                    new ClientHandler(socket1, this).start(); //ClientThread
-                    log.debug("Thread created");
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        Queue<SocketChannel> socketChannelQueue = new ArrayBlockingQueue<SocketChannel>(1000);
+        new Thread(new SocketAcceptor(socketChannelQueue)).start();
+        new Thread(new SocketProcessor(socketChannelQueue)).start();
     }
 
     public synchronized Game registerNewPlayer(Player player) {
