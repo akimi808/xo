@@ -1,5 +1,9 @@
 package com.akimi808.xo.server;
 
+import com.akimi808.xo.client.ClientProtocol;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.channels.ServerSocketChannel;
@@ -12,6 +16,7 @@ import java.util.Queue;
 public class SocketAcceptor implements Runnable {
     private Queue<SocketChannel> socketChannelQueue;
     private ServerSocketChannel serverSocketChannel;
+    private static final Logger log = LogManager.getLogger(SocketAcceptor.class);
 
     public SocketAcceptor(Queue<SocketChannel> socketChannelQueue) {
         this.socketChannelQueue = socketChannelQueue;
@@ -22,12 +27,22 @@ public class SocketAcceptor implements Runnable {
         try {
             serverSocketChannel = ServerSocketChannel.open();
             serverSocketChannel.bind(new InetSocketAddress(2010));
-            while (true) {
-                SocketChannel socketChannel = serverSocketChannel.accept();
-                socketChannelQueue.add(socketChannel);
-            }
         } catch (IOException e) {
             e.printStackTrace();
+            return;
+        }
+
+
+        while (true) {
+            try {
+                SocketChannel socketChannel = this.serverSocketChannel.accept();
+                log.debug("Socket accepted" + socketChannel); //?
+                this.socketChannelQueue.add(socketChannel);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 }
+
+

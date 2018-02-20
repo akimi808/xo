@@ -1,5 +1,6 @@
 package com.akimi808.xo.server;
 
+import java.io.IOException;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
@@ -18,9 +19,14 @@ public class SocketProcessor implements Runnable {
     }
 
     @Override
-    public void run() {
+    public void run() throws  {
         while (true ) {
             executeCycle();
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -30,16 +36,31 @@ public class SocketProcessor implements Runnable {
         writeToSockets();
     }
 
+
     private void takeNewSockets() {
         while (true) {
             SocketChannel socketChannel = socketChannelQueue.poll();
             if (!socketChannel.equals(null)) {
                 try {
                     SelectionKey key = socketChannel.register(selector, SelectionKey.OP_READ);
+                    key.attach(socketChannel);
                 } catch (ClosedChannelException e) {
                     e.printStackTrace();
                 }
             }
-        };
+        }
     }
+
+
+    private void readFromSockets() {
+    }
+
+    private void writeToSockets() {
+    }
+
+
 }
+
+
+
+
