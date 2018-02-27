@@ -69,7 +69,8 @@ public class SocketProcessor implements Runnable {
                 SocketChannel socketChannel = (SocketChannel) selectionKey.attachment();
                 socketChannel.read(byteBuffer);
                 byteBuffer.flip();
-                ArrayList<String> messages = ServerProtocol.decodeMessage(byteBuffer);
+                ServerProtocol serverProtocol = new ServerProtocol(new XoServer());
+                ArrayList<Message> messages = serverProtocol.decodeMessage(byteBuffer);
             }
         }
     }
