@@ -36,6 +36,7 @@ public class SocketAcceptor implements Runnable {
         while (true) {
             try {
                 SocketChannel socketChannel = this.serverSocketChannel.accept();
+                socketChannel.configureBlocking(false);
                 log.debug("Socket accepted" + socketChannel); //?
                 this.socketChannelQueue.add(socketChannel);
             } catch (IOException e) {

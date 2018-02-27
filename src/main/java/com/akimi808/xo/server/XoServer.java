@@ -3,6 +3,7 @@ package com.akimi808.xo.server;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.io.IOException;
 import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
 import java.util.List;
@@ -17,10 +18,14 @@ public class XoServer {
     private List<Game> gameList = new ArrayList<>();
 
     public static void main(String[] args) {
-        new XoServer().run();
+        try {
+            new XoServer().run();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
-    private void run() {
+    private void run() throws IOException {
         Queue<SocketChannel> socketChannelQueue = new ArrayBlockingQueue<SocketChannel>(1000);
         new Thread(new SocketAcceptor(socketChannelQueue)).start();
         new Thread(new SocketProcessor(socketChannelQueue)).start();

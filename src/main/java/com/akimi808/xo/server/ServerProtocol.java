@@ -3,6 +3,10 @@ package com.akimi808.xo.server;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.io.UnsupportedEncodingException;
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
+
 /**
  * Created by akimi808 on 12/11/2017.
  */
@@ -114,6 +118,30 @@ public class ServerProtocol {
 
     public ServerState getServerState() {
         return serverState;
+    }
+
+    public static ArrayList<String> decodeMessage(ByteBuffer readBytes) {
+        ArrayList<String>listOfMessges = new ArrayList<>();
+        byte[] incompleteMessage = new byte[readBytes.remaining()];
+        String completeMessage = "";
+        int i = 0;
+        while (readBytes.hasRemaining()) {
+            byte b = readBytes.get();
+            if (b != '\n') {
+                incompleteMessage[i] = b;
+                i++;
+            } else {
+                try {
+                    completeMessage = new String(incompleteMessage, 0, i, "ISO-8859-1");
+                    listOfMessges.add(completeMessage);
+                    incompleteMessage = new byte[readBytes.remaining()];
+                    i = 0;
+                } catch (UnsupportedEncodingException e) {
+                    // pass
+                }
+            }
+        }
+        return listOfMessges;
     }
 }
 
