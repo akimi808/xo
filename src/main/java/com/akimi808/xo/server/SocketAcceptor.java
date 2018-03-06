@@ -1,6 +1,5 @@
 package com.akimi808.xo.server;
 
-import com.akimi808.xo.client.ClientProtocol;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -14,12 +13,14 @@ import java.util.Queue;
  * Created by akimi808 on 19/02/2018.
  */
 public class SocketAcceptor implements Runnable {
-    private Queue<SocketChannel> socketChannelQueue;
+    private Queue<Client> clientQueue;
     private ServerSocketChannel serverSocketChannel;
     private static final Logger log = LogManager.getLogger(SocketAcceptor.class);
+    private XoServer xoServer;
 
-    public SocketAcceptor(Queue<SocketChannel> socketChannelQueue) {
-        this.socketChannelQueue = socketChannelQueue;
+    public SocketAcceptor(Queue<Client> clientQueue, XoServer xoServer) {
+        this.clientQueue = clientQueue;
+        this.xoServer = xoServer;
     }
 
     @Override
@@ -37,8 +38,8 @@ public class SocketAcceptor implements Runnable {
             try {
                 SocketChannel socketChannel = this.serverSocketChannel.accept();
                 socketChannel.configureBlocking(false);
-                log.debug("Socket accepted" + socketChannel); //?
-                this.socketChannelQueue.add(socketChannel);
+                log.debug("Socket accepted" + socketChannel);
+                this.clientQueue.add(new Client(socketChannel, new ServerProtocol(xoServer)));
             } catch (IOException e) {
                 e.printStackTrace();
             }

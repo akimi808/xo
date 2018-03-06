@@ -6,20 +6,19 @@ import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
-import java.util.ArrayList;
-import java.util.Queue;
+import java.util.*;
 
 /**
  * Created by akimi808 on 19/02/2018.
  */
 public class SocketProcessor implements Runnable {
-    private Queue<SocketChannel> socketChannelQueue;
+    private Queue<Client> clientQueue;
     private Selector selector;
+    private Queue<Tuple> outboundResponses = new ArrayDeque<>();
 
 
-
-    public SocketProcessor(Queue<SocketChannel> socketChannelQueue) throws IOException {
-        this.socketChannelQueue = socketChannelQueue;
+    public SocketProcessor(Queue<Client> clientQueue) throws IOException {
+        this.clientQueue = clientQueue;
         this.selector = Selector.open();
     }
 
@@ -45,15 +44,14 @@ public class SocketProcessor implements Runnable {
         writeToSockets();
     }
 
-
     private void takeNewSockets() {
         while (true) {
-            SocketChannel socketChannel = socketChannelQueue.poll();
-            if (socketChannel == null) {break;}
-            if (!socketChannel.equals(null)) {
+            Client client = clientQueue.poll();
+            if (client != null) {
                 try {
+                    SocketChannel socketChannel = client.getSocketChannel();
                     SelectionKey key = socketChannel.register(selector, SelectionKey.OP_READ);
-                    key.attach(socketChannel);
+                    key.attach(client);
                 } catch (ClosedChannelException e) {
                     e.printStackTrace();
                 }
@@ -61,22 +59,33 @@ public class SocketProcessor implements Runnable {
         }
     }
 
-
     private void readFromSockets() throws IOException {
         ByteBuffer byteBuffer = ByteBuffer.allocate(16 * 1024);
         if (selector.selectNow() > 0) {
-            for (SelectionKey selectionKey : selector.selectedKeys()) {
-                SocketChannel socketChannel = (SocketChannel) selectionKey.attachment();
+            Iterator<SelectionKey> selectionKeyIterator = selector.selectedKeys().iterator();
+            while (selectionKeyIterator.hasNext()) {
+                SelectionKey selectionKey = selectionKeyIterator.next();
+                Client client = (Client) selectionKey.attachment();
+                SocketChannel socketChannel = client.getSocketChannel();
+                MessageReader messageReader = client.getMessageReader();
+                ServerProtocol serverProtocol = client.getServerProtocol();
                 socketChannel.read(byteBuffer);
                 byteBuffer.flip();
-                ServerProtocol serverProtocol = new ServerProtocol(new XoServer());
-                ArrayList<Message> messages = serverProtocol.decodeMessage(byteBuffer);
+                List<Message> messages = messageReader.decodeMessage(byteBuffer);
+                for (Message message : messages) {
+                    String response = serverProtocol.processMessage(message.getText());
+                    outboundResponses.add(new Tuple(response, client));
+                }
+                selectionKeyIterator.remove();
             }
         }
     }
 
 
     private void writeToSockets() {
+        //когда хотим записать в несколько сокетов, мы должна все сокеты, куда хотим записать, .
+        // Помним, что записываем не всё, что у нас есть. Проверть, записали ли всё сообщение, запомнить это.
+        //Как только записали сообщение целиком, долдна удалить сокет из селектора
     }
 
 

@@ -4,7 +4,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
-import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
@@ -26,9 +25,9 @@ public class XoServer {
     }
 
     private void run() throws IOException {
-        Queue<SocketChannel> socketChannelQueue = new ArrayBlockingQueue<SocketChannel>(1000);
-        new Thread(new SocketAcceptor(socketChannelQueue)).start();
-        new Thread(new SocketProcessor(socketChannelQueue)).start();
+        Queue<Client> clientQueue = new ArrayBlockingQueue<>(1000);
+        new Thread(new SocketAcceptor(clientQueue, this)).start();
+        new Thread(new SocketProcessor(clientQueue)).start();
     }
 
     public synchronized Game registerNewPlayer(Player player) {
