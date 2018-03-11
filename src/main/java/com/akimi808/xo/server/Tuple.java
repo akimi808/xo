@@ -11,4 +11,17 @@ public class Tuple {
         this.response = response;
         this.client = client;
     }
+
+    public String getResponse() {
+        return response;
+    }
+
+    public String setResponse(String response) {
+        this.response = response;
+        return response;
+    }
+
+    public Client getClient() {
+        return client;
+    }
 }
