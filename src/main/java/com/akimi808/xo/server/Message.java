@@ -4,21 +4,11 @@ package com.akimi808.xo.server;
  * Created by akimi808 on 22/02/2018.
  */
 public class Message {
-    private boolean complete = false;
     private String text = "";
 
-    public Message(boolean complete, String text) {
+    public Message(String text) {
 
-        this.setComplete(complete);
         this.setText(text);
-    }
-
-    public boolean isComplete() {
-        return complete;
-    }
-
-    public void setComplete(boolean complete) {
-        this.complete = complete;
     }
 
     public String getText() {
@@ -36,22 +26,18 @@ public class Message {
 
         Message message = (Message) o;
 
-        if (complete != message.complete) return false;
         return text.equals(message.text);
     }
 
     @Override
     public int hashCode() {
-        int result = (complete ? 1 : 0);
-        result = 31 * result + text.hashCode();
-        return result;
+        return text.hashCode();
     }
 
     @Override
     public String toString() {
         return "Message{" +
-                "complete=" + complete +
-                ", text='" + text + '\'' +
+                "text='" + text + '\'' +
                 '}';
     }
 }

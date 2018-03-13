@@ -1,12 +1,18 @@
 package com.akimi808.xo.server;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
-import java.util.*;
+import java.util.ArrayDeque;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Queue;
 
 /**
  * Created by akimi808 on 19/02/2018.
@@ -16,16 +22,18 @@ public class SocketProcessor implements Runnable {
     private Selector readSelector;
     private Selector writeSelector;
     private Queue<Tuple> outboundResponses = new ArrayDeque<>();
+    private static final Logger log = LogManager.getLogger(SocketProcessor.class);
 
 
     public SocketProcessor(Queue<Client> clientQueue) throws IOException {
         this.clientQueue = clientQueue;
         this.readSelector = Selector.open();
+        this.writeSelector = Selector.open();
     }
 
     @Override
     public void run() {
-        while (true ) {
+        while (true) {
             try {
                 executeCycle();
             } catch (IOException e) {
@@ -46,7 +54,7 @@ public class SocketProcessor implements Runnable {
     }
 
     private void takeNewSockets() {
-        while (true) {
+        while (!clientQueue.isEmpty()) {
             Client client = clientQueue.poll();
             if (client != null) {
                 try {
@@ -73,14 +81,17 @@ public class SocketProcessor implements Runnable {
                 ServerProtocol serverProtocol = client.getServerProtocol();
                 socketChannel.read(byteBuffer);
                 byteBuffer.flip();
+                log.debug("Read bytes [{}]", byteBuffer);
                 List<Message> messages = messageReader.decodeMessage(byteBuffer);
                 for (Message message : messages) {
                     String response = serverProtocol.processMessage(message.getText());
                     outboundResponses.add(new Tuple(response, client));
+                    //fixme
                     keyWrite = socketChannel.register(writeSelector, SelectionKey.OP_WRITE);
                     keyWrite.attach(client);
                 }
                 selectionKeyIterator.remove();
+                byteBuffer.clear();
             }
         }
     }
@@ -88,32 +99,39 @@ public class SocketProcessor implements Runnable {
 
     private void writeToSockets() throws IOException {
         ByteBuffer writeBuffer = ByteBuffer.allocate(16 * 1024);
+
         if (writeSelector.selectNow() > 0) {
             Iterator<SelectionKey> selectionKeyIterator = writeSelector.selectedKeys().iterator();
             while (selectionKeyIterator.hasNext()) {
                 SelectionKey selectionKey = selectionKeyIterator.next();
-                Tuple tuple = (Tuple) selectionKey.attachment();
-                while (!outboundResponses.isEmpty()) {
-                    tuple = outboundResponses.element();
-                    SocketChannel socketChannel = tuple.getClient().getSocketChannel();
-                    String messageText = tuple.getResponse();
-                    byte[] messageTextBytes = messageText.getBytes();
-                    writeBuffer.put(messageTextBytes);
-                    int writed = socketChannel.write(writeBuffer);
-                    if (writed == messageTextBytes.length) {
-                        socketChannel.close();
-                        outboundResponses.remove(tuple);
+                Client client = (Client) selectionKey.attachment();
+                for (Iterator<Tuple> iterator = outboundResponses.iterator(); iterator.hasNext(); ) {
+                    Tuple tuple = iterator.next();
+                    if (tuple.getClient().equals(client)) {
+                        SocketChannel socketChannel = client.getSocketChannel();
+                        String messageText = tuple.getResponse();
+                        byte[] messageTextBytes = messageText.getBytes();
+                        writeBuffer.put(messageTextBytes);
+                        writeBuffer.put((byte)'\n');
+                        writeBuffer.flip();
+                        int written = socketChannel.write(writeBuffer);
+                        if (written == messageTextBytes.length + 1) {
+                            selectionKey.cancel();
+                            iterator.remove();
+                        } else {
+                            String newResponse = new String(messageTextBytes, written, messageTextBytes.length - written, "ISO-8859-1");
+                            tuple.setResponse(newResponse);
+                        }
                         selectionKeyIterator.remove();
-                    } else {
-                        String newResponse = new String(messageTextBytes, writed, messageTextBytes.length, "ISO-8859-1");
-                        tuple.setResponse(newResponse);
+                        writeBuffer.clear();
                     }
-                        //изменить в очереди из таплов, в тапле response, сообщение (вычесть
-                    }
-
+                }
+            }
+        }
     }
-
 }
+
+
 
 
 

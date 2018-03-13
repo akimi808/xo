@@ -28,6 +28,7 @@ public class XoServer {
         Queue<Client> clientQueue = new ArrayBlockingQueue<>(1000);
         new Thread(new SocketAcceptor(clientQueue, this)).start();
         new Thread(new SocketProcessor(clientQueue)).start();
+        log.debug("Threads created");
     }
 
     public synchronized Game registerNewPlayer(Player player) {
