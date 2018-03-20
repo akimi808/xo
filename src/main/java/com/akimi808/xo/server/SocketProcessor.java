@@ -9,10 +9,7 @@ import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
-import java.util.ArrayDeque;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Queue;
+import java.util.*;
 
 /**
  * Created by akimi808 on 19/02/2018.
@@ -23,6 +20,7 @@ public class SocketProcessor implements Runnable {
     private Selector writeSelector;
     private Queue<Tuple> outboundResponses = new ArrayDeque<>();
     private static final Logger log = LogManager.getLogger(SocketProcessor.class);
+    private Set<SelectionKey> keysToCancel = new HashSet<>();
 
 
     public SocketProcessor(Queue<Client> clientQueue) throws IOException {
@@ -83,12 +81,16 @@ public class SocketProcessor implements Runnable {
                 byteBuffer.flip();
                 log.debug("Read bytes [{}]", byteBuffer);
                 List<Message> messages = messageReader.decodeMessage(byteBuffer);
-                for (Message message : messages) {
+                for (Iterator<Message> iterator = messages.iterator(); iterator.hasNext(); ) {
+                    Message message = iterator.next();
+                    log.debug("Received message: [{}]", message.getText());
                     String response = serverProtocol.processMessage(message.getText());
+                    log.debug("Response for client [{}]", response);
                     outboundResponses.add(new Tuple(response, client));
-                    //fixme
                     keyWrite = socketChannel.register(writeSelector, SelectionKey.OP_WRITE);
                     keyWrite.attach(client);
+                    keysToCancel.remove(keyWrite);
+                    iterator.remove();
                 }
                 selectionKeyIterator.remove();
                 byteBuffer.clear();
@@ -96,10 +98,9 @@ public class SocketProcessor implements Runnable {
         }
     }
 
-
     private void writeToSockets() throws IOException {
         ByteBuffer writeBuffer = ByteBuffer.allocate(16 * 1024);
-
+        delayedCancel();
         if (writeSelector.selectNow() > 0) {
             Iterator<SelectionKey> selectionKeyIterator = writeSelector.selectedKeys().iterator();
             while (selectionKeyIterator.hasNext()) {
@@ -116,17 +117,26 @@ public class SocketProcessor implements Runnable {
                         writeBuffer.flip();
                         int written = socketChannel.write(writeBuffer);
                         if (written == messageTextBytes.length + 1) {
-                            selectionKey.cancel();
+                            keysToCancel.add(selectionKey);
                             iterator.remove();
                         } else {
                             String newResponse = new String(messageTextBytes, written, messageTextBytes.length - written, "ISO-8859-1");
                             tuple.setResponse(newResponse);
                         }
-                        selectionKeyIterator.remove();
                         writeBuffer.clear();
                     }
                 }
+                selectionKeyIterator.remove();
             }
+        }
+    }
+
+
+    private void delayedCancel() {
+        for (Iterator<SelectionKey> iterator = keysToCancel.iterator(); iterator.hasNext(); ) {
+            SelectionKey next = iterator.next();
+            next.cancel();
+            iterator.remove();
         }
     }
 }
