@@ -9,6 +9,7 @@ public class Client {
     private SocketChannel socketChannel;
     private MessageReader messageReader = new MessageReader();
     private ServerProtocol serverProtocol;
+    private MessageWriter messageWriter = new MessageWriter();
 
 
     public Client(SocketChannel socketChannel, ServerProtocol serverProtocol) {
@@ -26,5 +27,9 @@ public class Client {
 
     public ServerProtocol getServerProtocol() {
         return serverProtocol;
+    }
+
+    public MessageWriter getMessageWriter() {
+        return messageWriter;
     }
 }

@@ -18,7 +18,6 @@ public class SocketProcessor implements Runnable {
     private Queue<Client> clientQueue;
     private Selector readSelector;
     private Selector writeSelector;
-    private Queue<Tuple> outboundResponses = new ArrayDeque<>();
     private static final Logger log = LogManager.getLogger(SocketProcessor.class);
     private Set<SelectionKey> keysToCancel = new HashSet<>();
 
@@ -86,7 +85,7 @@ public class SocketProcessor implements Runnable {
                     log.debug("Received message: [{}]", message.getText());
                     String response = serverProtocol.processMessage(message.getText());
                     log.debug("Response for client [{}]", response);
-                    outboundResponses.add(new Tuple(response, client));
+                    client.getMessageWriter().enqueue(response);
                     keyWrite = socketChannel.register(writeSelector, SelectionKey.OP_WRITE);
                     keyWrite.attach(client);
                     keysToCancel.remove(keyWrite);
@@ -106,31 +105,16 @@ public class SocketProcessor implements Runnable {
             while (selectionKeyIterator.hasNext()) {
                 SelectionKey selectionKey = selectionKeyIterator.next();
                 Client client = (Client) selectionKey.attachment();
-                for (Iterator<Tuple> iterator = outboundResponses.iterator(); iterator.hasNext(); ) {
-                    Tuple tuple = iterator.next();
-                    if (tuple.getClient().equals(client)) {
-                        SocketChannel socketChannel = client.getSocketChannel();
-                        String messageText = tuple.getResponse();
-                        byte[] messageTextBytes = messageText.getBytes();
-                        writeBuffer.put(messageTextBytes);
-                        writeBuffer.put((byte)'\n');
-                        writeBuffer.flip();
-                        int written = socketChannel.write(writeBuffer);
-                        if (written == messageTextBytes.length + 1) {
-                            keysToCancel.add(selectionKey);
-                            iterator.remove();
-                        } else {
-                            String newResponse = new String(messageTextBytes, written, messageTextBytes.length - written, "ISO-8859-1");
-                            tuple.setResponse(newResponse);
-                        }
-                        writeBuffer.clear();
-                    }
+                MessageWriter mw = client.getMessageWriter(); //
+                mw.writeToSocket(client.getSocketChannel(), writeBuffer);
+                if (mw.isComplete()) {
+                    keysToCancel.add(selectionKey);
                 }
+                writeBuffer.clear();
                 selectionKeyIterator.remove();
             }
         }
     }
-
 
     private void delayedCancel() {
         for (Iterator<SelectionKey> iterator = keysToCancel.iterator(); iterator.hasNext(); ) {
