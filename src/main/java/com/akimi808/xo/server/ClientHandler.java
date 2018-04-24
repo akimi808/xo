@@ -14,13 +14,13 @@ import java.net.Socket;
  */
 public class ClientHandler extends Thread {
     private static final Logger log = LogManager.getLogger(ClientHandler.class);
-    private final ServerProtocol serverProtocol;
+    private ServerProtocol serverProtocol;
     private Socket socket;
 
 
     public ClientHandler(Socket socket, XoServer xoServer) {
         this.socket = socket;
-        serverProtocol = new ServerProtocol(xoServer, client);
+//        serverProtocol = new ServerProtocol(xoServer, client);
     }
 
     @Override

@@ -9,16 +9,16 @@ import org.apache.logging.log4j.Logger;
 public class ServerProtocol {
     private static final Logger log = LogManager.getLogger(ServerProtocol.class);
     public ServerState serverState = ServerState.INTRO;
-    public final XoServer xoServer;
+    public XoServer xoServer;
     private Game game;
     private Player player;
     private Client client;
+    private GameManager gameManager;
 
-    public ServerProtocol(XoServer xoServer, Client client) {
-        this.xoServer = xoServer;
+    public ServerProtocol(Client client, GameManager gameManager) {
         this.client = client;
+        this.gameManager = gameManager;
     }
-
 
     public String processMessage(String line) {
         switch (serverState) {
@@ -32,8 +32,8 @@ public class ServerProtocol {
             case PLAYERS_LIST:
                 if (line.startsWith("Player's name")) {
                     String name = extractPlayerName(line);
-                    player = new Player(name);
-                    game = xoServer.registerNewPlayer(player);
+                    player = PlayerManager.getPlayer(name);
+                    game = gameManager.registerNewPlayer(player); //FIXME
                     if (!game.hasSecondPlayer()) {
                         return "No players";
                     } else {

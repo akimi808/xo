@@ -17,10 +17,12 @@ public class SocketAcceptor implements Runnable {
     private ServerSocketChannel serverSocketChannel;
     private static final Logger log = LogManager.getLogger(SocketAcceptor.class);
     private XoServer xoServer;
+    private GameManager gameManager;
 
-    public SocketAcceptor(Queue<Client> clientQueue, XoServer xoServer) {
+    public SocketAcceptor(Queue<Client> clientQueue, XoServer xoServer, GameManager gameManager) {
         this.clientQueue = clientQueue;
         this.xoServer = xoServer;
+        this.gameManager = gameManager;
     }
 
     @Override
@@ -40,7 +42,7 @@ public class SocketAcceptor implements Runnable {
                 socketChannel.configureBlocking(false);
 //                socketChannel.setOption(StandardSocketOptions.SO_SNDBUF, 1);
                 log.debug("Socket accepted" + socketChannel);
-                this.clientQueue.add(new Client(socketChannel, xoServer));
+                this.clientQueue.add(new Client(socketChannel, xoServer, gameManager));
             } catch (IOException e) {
                 e.printStackTrace();
             }

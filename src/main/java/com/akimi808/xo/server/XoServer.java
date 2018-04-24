@@ -4,8 +4,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
 
@@ -14,7 +12,6 @@ import java.util.concurrent.ArrayBlockingQueue;
  */
 public class XoServer {
     private static final Logger log = LogManager.getLogger(XoServer.class);
-    private List<Game> gameList = new ArrayList<>();
 
     public static void main(String[] args) {
         try {
@@ -26,25 +23,9 @@ public class XoServer {
 
     private void run() throws IOException {
         Queue<Client> clientQueue = new ArrayBlockingQueue<>(1000);
-        new Thread(new SocketAcceptor(clientQueue, this)).start();
+        GameManager gameManager = new GameManager();
+        new Thread(new SocketAcceptor(clientQueue, this, gameManager)).start();
         new Thread(new SocketProcessor(clientQueue)).start();
         log.debug("Threads created");
     }
-
-    public synchronized Game registerNewPlayer(Player player) {
-        for (Game game : gameList) {
-            if (!game.hasSecondPlayer()) {
-                game.addSecondPlayer(player);
-                return game;
-            }
-        }
-        Game game = new Game(player);
-        gameList.add(game);
-        return game;
-    }
-
-    public List<Game> getGameList() {
-        return gameList;
-    }
-
 }
