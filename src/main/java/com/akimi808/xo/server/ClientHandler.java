@@ -20,7 +20,7 @@ public class ClientHandler extends Thread {
 
     public ClientHandler(Socket socket, XoServer xoServer) {
         this.socket = socket;
-        serverProtocol = new ServerProtocol(xoServer);
+        serverProtocol = new ServerProtocol(xoServer, client);
     }
 
     @Override

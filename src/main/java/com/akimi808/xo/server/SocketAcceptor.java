@@ -5,7 +5,6 @@ import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.net.StandardSocketOptions;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.Queue;
@@ -41,7 +40,7 @@ public class SocketAcceptor implements Runnable {
                 socketChannel.configureBlocking(false);
 //                socketChannel.setOption(StandardSocketOptions.SO_SNDBUF, 1);
                 log.debug("Socket accepted" + socketChannel);
-                this.clientQueue.add(new Client(socketChannel, new ServerProtocol(xoServer)));
+                this.clientQueue.add(new Client(socketChannel, xoServer));
             } catch (IOException e) {
                 e.printStackTrace();
             }

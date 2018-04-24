@@ -3,10 +3,6 @@ package com.akimi808.xo.server;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.UnsupportedEncodingException;
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-
 /**
  * Created by akimi808 on 12/11/2017.
  */
@@ -16,9 +12,11 @@ public class ServerProtocol {
     public final XoServer xoServer;
     private Game game;
     private Player player;
+    private Client client;
 
-    public ServerProtocol(XoServer xoServer) {
+    public ServerProtocol(XoServer xoServer, Client client) {
         this.xoServer = xoServer;
+        this.client = client;
     }
 
 

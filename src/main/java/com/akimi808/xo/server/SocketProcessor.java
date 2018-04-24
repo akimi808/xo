@@ -76,20 +76,26 @@ public class SocketProcessor implements Runnable {
                 SocketChannel socketChannel = client.getSocketChannel();
                 MessageReader messageReader = client.getMessageReader();
                 ServerProtocol serverProtocol = client.getServerProtocol();
-                socketChannel.read(byteBuffer);
-                byteBuffer.flip();
-                log.debug("Read bytes [{}]", byteBuffer);
-                List<Message> messages = messageReader.decodeMessage(byteBuffer);
-                for (Iterator<Message> iterator = messages.iterator(); iterator.hasNext(); ) {
-                    Message message = iterator.next();
-                    log.debug("Received message: [{}]", message.getText());
-                    String response = serverProtocol.processMessage(message.getText());
-                    log.debug("Response for client [{}]", response);
-                    client.getMessageWriter().enqueue(response);
-                    keyWrite = socketChannel.register(writeSelector, SelectionKey.OP_WRITE);
-                    keyWrite.attach(client);
-                    keysToCancel.remove(keyWrite);
-                    iterator.remove();
+                if (socketChannel.read(byteBuffer) == -1) {
+                    socketChannel.close();
+                    selectionKey.attach(null);
+                    selectionKey.cancel();
+//                    client.getServerProtocol().getGame().getAnotherPlayersName()
+                } else {
+                    byteBuffer.flip();
+                    log.debug("Read bytes [{}]", byteBuffer);
+                    List<Message> messages = messageReader.decodeMessage(byteBuffer);
+                    for (Iterator<Message> iterator = messages.iterator(); iterator.hasNext(); ) {
+                        Message message = iterator.next();
+                        log.debug("Received message: [{}]", message.getText());
+                        String response = serverProtocol.processMessage(message.getText());
+                        log.debug("Response for client [{}]", response);
+                        client.getMessageWriter().enqueue(response);
+                        keyWrite = socketChannel.register(writeSelector, SelectionKey.OP_WRITE);
+                        keyWrite.attach(client);
+                        keysToCancel.remove(keyWrite);
+                        iterator.remove();
+                    }
                 }
                 selectionKeyIterator.remove();
                 byteBuffer.clear();

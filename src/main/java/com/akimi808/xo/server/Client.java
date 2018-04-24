@@ -12,9 +12,9 @@ public class Client {
     private MessageWriter messageWriter = new MessageWriter();
 
 
-    public Client(SocketChannel socketChannel, ServerProtocol serverProtocol) {
+    public Client(SocketChannel socketChannel, XoServer xoServer) {
         this.socketChannel = socketChannel;
-        this.serverProtocol = serverProtocol;
+        this.serverProtocol = new ServerProtocol(xoServer, this);
     }
 
     public SocketChannel getSocketChannel() {
