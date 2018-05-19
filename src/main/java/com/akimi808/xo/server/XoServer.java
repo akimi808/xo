@@ -25,7 +25,7 @@ public class XoServer {
         Queue<Client> clientQueue = new ArrayBlockingQueue<>(1000);
         GameManager gameManager = new GameManager();
         new Thread(new SocketAcceptor(clientQueue, this, gameManager)).start();
-        new Thread(new SocketProcessor(clientQueue)).start();
+        new Thread(new SocketProcessor(clientQueue, new Dispatcher())).start();
         log.debug("Threads created");
     }
 }

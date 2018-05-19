@@ -20,10 +20,12 @@ public class SocketProcessor implements Runnable {
     private Selector writeSelector;
     private static final Logger log = LogManager.getLogger(SocketProcessor.class);
     private Set<SelectionKey> keysToCancel = new HashSet<>();
+    private Dispatcher dispatcher;
 
 
-    public SocketProcessor(Queue<Client> clientQueue) throws IOException {
+    public SocketProcessor(Queue<Client> clientQueue, Dispatcher dispatcher) throws IOException {
         this.clientQueue = clientQueue;
+        this.dispatcher = dispatcher;
         this.readSelector = Selector.open();
         this.writeSelector = Selector.open();
     }
@@ -80,7 +82,6 @@ public class SocketProcessor implements Runnable {
                     socketChannel.close();
                     selectionKey.attach(null);
                     selectionKey.cancel();
-//                    client.getServerProtocol().getGame().getAnotherPlayersName()
                 } else {
                     byteBuffer.flip();
                     log.debug("Read bytes [{}]", byteBuffer);
@@ -88,7 +89,7 @@ public class SocketProcessor implements Runnable {
                     for (Iterator<Message> iterator = messages.iterator(); iterator.hasNext(); ) {
                         Message message = iterator.next();
                         log.debug("Received message: [{}]", message.getText());
-                        String response = serverProtocol.processMessage(message.getText());
+                        String response = dispatcher.dispatch(message, client);//serverProtocol.processMessage(message.getText());
                         log.debug("Response for client [{}]", response);
                         client.getMessageWriter().enqueue(response);
                         keyWrite = socketChannel.register(writeSelector, SelectionKey.OP_WRITE);
