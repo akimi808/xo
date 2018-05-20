@@ -1,5 +1,8 @@
 package com.akimi808.xo.server;
 
+import com.akimi808.xo.common.Message;
+import com.akimi808.xo.common.Request;
+import com.akimi808.xo.common.Update;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -20,10 +23,12 @@ public class SocketProcessor implements Runnable {
     private Selector writeSelector;
     private static final Logger log = LogManager.getLogger(SocketProcessor.class);
     private Set<SelectionKey> keysToCancel = new HashSet<>();
+    private Dispatcher dispatcher;
 
 
-    public SocketProcessor(Queue<Client> clientQueue) throws IOException {
+    public SocketProcessor(Queue<Client> clientQueue, Dispatcher dispatcher) throws IOException {
         this.clientQueue = clientQueue;
+        this.dispatcher = dispatcher;
         this.readSelector = Selector.open();
         this.writeSelector = Selector.open();
     }
@@ -80,20 +85,13 @@ public class SocketProcessor implements Runnable {
                     socketChannel.close();
                     selectionKey.attach(null);
                     selectionKey.cancel();
-//                    client.getServerProtocol().getGame().getAnotherPlayersName()
                 } else {
                     byteBuffer.flip();
                     log.debug("Read bytes [{}]", byteBuffer);
-                    List<Message> messages = messageReader.decodeMessage(byteBuffer);
-                    for (Iterator<Message> iterator = messages.iterator(); iterator.hasNext(); ) {
+                    List<Message> requests = messageReader.decodeMessage(byteBuffer);
+                    for (Iterator<Message> iterator = requests.iterator(); iterator.hasNext(); ) {
                         Message message = iterator.next();
-                        log.debug("Received message: [{}]", message.getText());
-                        String response = serverProtocol.processMessage(message.getText());
-                        log.debug("Response for client [{}]", response);
-                        client.getMessageWriter().enqueue(response);
-                        keyWrite = socketChannel.register(writeSelector, SelectionKey.OP_WRITE);
-                        keyWrite.attach(client);
-                        keysToCancel.remove(keyWrite);
+                        message.handle(this, client);
                         iterator.remove();
                     }
                 }
@@ -128,6 +126,14 @@ public class SocketProcessor implements Runnable {
             next.cancel();
             iterator.remove();
         }
+    }
+
+    public void handleRequest(Request request, Client client) {
+        dispatcher.dispatch(request, client);
+    }
+
+    public void handleUpdate(Update update, Client client) {
+
     }
 }
 

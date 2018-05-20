@@ -5,44 +5,29 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.akimi808.xo.common.Message;
+import com.akimi808.xo.common.Request;
+import com.akimi808.xo.common.RingBuffer;
+
 /**
  * Created by akimi808 on 05/03/2018.
  */
 public class MessageReader {
 
-    private ArrayList<Message> listOfMessages = new ArrayList<>();
-    private byte[] incomplete = new byte[1024];
-    int offset = 0;
+    private ArrayList<Message> listOfRequests = new ArrayList<>();
+    private RingBuffer buffer = new RingBuffer(2048);
 
     public List<Message> decodeMessage(ByteBuffer readBytes) {
-        String completeMessageStr = "";
-        try {
-            while (readBytes.hasRemaining()) {
-                byte b = readBytes.get();
-                if (b != '\n') {
-                    incomplete[offset] = b;
-                    offset++;
-                } else {
-                    completeMessageStr = new String(incomplete, 0, offset, "ISO-8859-1");
-                    listOfMessages.add(new Message(completeMessageStr));
-                    offset = 0;
-                }
-            }
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
-        return listOfMessages;
-    }
-
-    public String getIncompleteMessage() {
-        String incompleteMessage = "";
-        if (offset != 0) {
-            try {
-                incompleteMessage = new String(incomplete, 0, offset, "ISO-8859-1");
-            } catch (UnsupportedEncodingException e) {
-                e.printStackTrace();
+        while (readBytes.remaining() > 0) {
+            if (buffer.writeFromByteBuffer(readBytes) <= 0) {
+                // Out of capacity
+                throw new RuntimeException();
+            };
+            if (Message.hasComplete(buffer)) {
+                listOfRequests.add(Message.read(buffer));
             }
         }
-        return incompleteMessage;
+        readBytes.clear();
+        return listOfRequests;
     }
 }
