@@ -1,6 +1,6 @@
 package com.akimi808.xo.common;
 
-import java.io.UnsupportedEncodingException;
+import java.util.Arrays;
 
 import com.akimi808.xo.server.Client;
 import com.akimi808.xo.server.SocketProcessor;
@@ -12,10 +12,10 @@ public class Request extends Message {
     public static final byte TYPE = 1;
     private final Integer requestId;
     private final String methodName;
-    private final Types[] parameterTypes;
+    private final Type[] parameterTypes;
     private final Object[] parameterValues;
 
-    public Request(Integer requestId, String methodName, Types[] parameterTypes, Object[] parameterValues) {
+    public Request(Integer requestId, String methodName, Type[] parameterTypes, Object[] parameterValues) {
         this.requestId = requestId;
         this.methodName = methodName;
         this.parameterTypes = parameterTypes;
@@ -23,21 +23,21 @@ public class Request extends Message {
     }
 
     public String getMethodName() {
-        return null;
+        return methodName;
     }
 
-    public Class<?>[] getParameterTypes() {
-        return new Class[0];
+    public Class<?>[] getParameterClasses() {
+        return Arrays.stream(parameterTypes).map(Type::toClass).toArray(size -> new Class<?>[size]);
     }
 
     public Object[] getParameters() {
-        return new Object[0];
+        return parameterValues;
     }
 
     public static Message read(RingBuffer buffer) {
         Integer requestId = readRequestId(buffer);
         String methodName = readMethodName(buffer);
-        Types[] parameterTypes = readParameterTypes(buffer);
+        Type[] parameterTypes = readParameterTypes(buffer);
         Object[] parameterValues = readParameterValues(buffer, parameterTypes);
         return new Request(requestId, methodName, parameterTypes, parameterValues);
     }
@@ -47,21 +47,21 @@ public class Request extends Message {
         socketProcessor.handleRequest(this, client);
     }
 
-    private static Object[] readParameterValues(RingBuffer buffer, Types[] parameterTypes) {
+    private static Object[] readParameterValues(RingBuffer buffer, Type[] parameterTypes) {
         Object[] values = new Object[parameterTypes.length];
         for (int i = 0; i < parameterTypes.length; i++) {
-            Types type = parameterTypes[i];
+            Type type = parameterTypes[i];
             values[i] = type.readValue(buffer);
         }
         return values;
     }
 
-    private static Types[] readParameterTypes(RingBuffer buffer) {
+    private static Type[] readParameterTypes(RingBuffer buffer) {
         short parametersLen = readShort(buffer);
-        Types[] types = new Types[parametersLen];
+        Type[] types = new Type[parametersLen];
         for (short i = 0; i < parametersLen; i++) {
             byte repr = readByte(buffer);
-            types[i] = Types.valueOf(repr);
+            types[i] = Type.valueOf(repr);
         }
         return types;
     }

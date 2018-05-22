@@ -24,7 +24,7 @@ public class Dispatcher {
 
     private Method getRequestedMethod(Request request, Client client) throws NoSuchMethodException {
         String methodName = request.getMethodName();
-        Class<?>[] parameterTypes = request.getParameterTypes();
+        Class<?>[] parameterTypes = request.getParameterClasses();
         return client.getServerProtocol().getClass().getDeclaredMethod(methodName, parameterTypes);
     }
 
