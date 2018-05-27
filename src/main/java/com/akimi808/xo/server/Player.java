@@ -1,11 +1,13 @@
 package com.akimi808.xo.server;
 
+import com.akimi808.xo.common.Mark;
+
 /**
  * Created by akimi808 on 25/12/2017.
  */
 public class Player {
     private String name;
-    private Figure type;
+    private Mark type;
 
     public Player(String name) {
         this.name = name;
@@ -16,11 +18,11 @@ public class Player {
         return name;
     }
 
-    public void setType(Figure type) {
+    public void setType(Mark type) {
         this.type = type;
     }
 
-    public Figure getType() {
+    public Mark getType() {
         return type;
     }
 }

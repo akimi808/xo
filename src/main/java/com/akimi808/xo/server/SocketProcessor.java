@@ -1,8 +1,6 @@
 package com.akimi808.xo.server;
 
-import com.akimi808.xo.common.Message;
-import com.akimi808.xo.common.Request;
-import com.akimi808.xo.common.Update;
+import com.akimi808.xo.common.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -17,7 +15,7 @@ import java.util.*;
 /**
  * Created by akimi808 on 19/02/2018.
  */
-public class SocketProcessor implements Runnable {
+public class SocketProcessor implements Runnable, Handler {
     private Queue<Client> clientQueue;
     private Selector readSelector;
     private Selector writeSelector;
@@ -130,6 +128,11 @@ public class SocketProcessor implements Runnable {
 
     public void handleRequest(Request request, Client client) {
         dispatcher.dispatch(request, client);
+    }
+
+    @Override
+    public void handleResponse(Response response, Client client) {
+
     }
 
     public void handleUpdate(Update update, Client client) {

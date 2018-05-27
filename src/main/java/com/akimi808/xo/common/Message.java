@@ -71,5 +71,5 @@ public abstract class Message {
                 ((i4 & 0xFF) << 24));
     }
 
-    abstract public void handle(SocketProcessor socketProcessor, Client client);
+    abstract public void handle(Handler handler, Client client);
 }

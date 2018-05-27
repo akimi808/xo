@@ -43,8 +43,8 @@ public class Request extends Message {
     }
 
     @Override
-    public void handle(SocketProcessor socketProcessor, Client client) {
-        socketProcessor.handleRequest(this, client);
+    public void handle(Handler handler, Client client) {
+        handler.handleRequest(this, client);
     }
 
     private static Object[] readParameterValues(RingBuffer buffer, Type[] parameterTypes) {

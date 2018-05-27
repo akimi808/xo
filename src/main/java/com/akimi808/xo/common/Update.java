@@ -10,7 +10,7 @@ public class Update extends Message {
     public static final byte TYPE = 3;
 
     @Override
-    public void handle(SocketProcessor socketProcessor, Client client) {
-        socketProcessor.handleUpdate(this, client);
+    public void handle(Handler handler, Client client) {
+        handler.handleUpdate(this, client);
     }
 }

@@ -4,18 +4,20 @@ package com.akimi808.xo.server;
 import java.util.HashMap;
 import java.util.Random;
 
+import com.akimi808.xo.common.Mark;
+
 /**
  * Created by akimi808 on 25/12/2017.
  */
 public class Game {
     private Player firstPlayer;
     private Player secondPlayer;
-    public Figure turn = Figure.X;
-    public HashMap<Integer, Figure> field = new HashMap<>();
+    public Mark turn = Mark.X;
+    public HashMap<Integer, Mark> field = new HashMap<>();
 
     public Game(Player firstPlayer) {
        this.firstPlayer = firstPlayer;
-        Figure type = Figure.valueOf(new Random().nextInt(2));
+        Mark type = Mark.valueOf(new Random().nextInt(2));
         firstPlayer.setType(type);
 
 
@@ -35,7 +37,7 @@ public class Game {
     }
 
     public Player choseXplayer() {
-        if (firstPlayer.getType().equals(Figure.X)) {
+        if (firstPlayer.getType().equals(Mark.X)) {
             return firstPlayer;
         } else {
             return secondPlayer;

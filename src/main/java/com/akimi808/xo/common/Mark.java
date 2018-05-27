@@ -1,13 +1,13 @@
-package com.akimi808.xo.server;
+package com.akimi808.xo.common;
 
 /**
  * Created by akimi808 on 26/12/2017.
  */
-public enum Figure {
+public enum Mark {
     X,
     O;
 
-    public static Figure valueOf(int i) {
+    public static Mark valueOf(int i) {
         if (i == 0) {
             return O;
         } else {
@@ -15,7 +15,7 @@ public enum Figure {
         }
     }
 
-    public Figure opposite() {
+    public Mark opposite() {
         if (this.equals(X)) {
             return O;
         } else {
