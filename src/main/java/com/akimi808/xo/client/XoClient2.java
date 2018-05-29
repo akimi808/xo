@@ -11,10 +11,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Queue;
 
-import com.akimi808.xo.common.Message;
-import com.akimi808.xo.common.Response;
-import com.akimi808.xo.common.Update;
+import com.akimi808.xo.common.*;
 import com.akimi808.xo.server.MessageReader;
+import com.akimi808.xo.server.Player;
 
 /**
  * @author Andrey Larionov
@@ -31,10 +30,10 @@ public class XoClient2 {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
     }
 
     public void login(String name) {
+        Request tryToLogIn = new Request(0, "tryToLogIn", new Type[]{Type.STRING}, new Object[]{name});
         
     }
 
@@ -58,7 +57,7 @@ public class XoClient2 {
         private final ByteBuffer readBuffer = ByteBuffer.allocate(2048);
         private final ByteBuffer writeBuffer = ByteBuffer.allocate(2048);
         private final MessageReader messageReader = new MessageReader();
-        private final Queue<Message> outboundQueue
+        private final Queue<Message> outboundQueue;
         private boolean writeComplete;
 
         public SocketProcessor(SocketChannel socket) {
@@ -119,14 +118,13 @@ public class XoClient2 {
         }
 
         private void writeToSocket() throws IOException {
-            boolean shouldSend = !outboundQueue.isEmpty() && !writeComplete;
+            boolean shouldSend = !outboundQueue.isEmpty() || !writeComplete;
             if (!shouldSend) {
                 socket.keyFor(writeSelector).cancel();
             } else {
                 writeComplete = false;
                 socket.register(writeSelector, SelectionKey.OP_WRITE);
             }
-
             if (writeSelector.selectNow() > 0) {
                 // Do write
             }

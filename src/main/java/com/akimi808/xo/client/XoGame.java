@@ -52,8 +52,10 @@ public class XoGame {
                 }
             }
             List<Integer> availableMoves = game.getAvailableMoves();
-            Integer selectedMove = availableMoves.get(new Random().nextInt(availableMoves.size()));
-            Response response = client.makeMove(game.getGameId(), selectedMove);
+            if (!availableMoves.isEmpty()) {
+                Integer selectedMove = availableMoves.get(new Random().nextInt(availableMoves.size()));
+                Response response = client.makeMove(game.getGameId(), selectedMove);
+            }
         }
 
         while (true) {
