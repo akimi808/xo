@@ -13,7 +13,6 @@ import java.util.Queue;
 
 import com.akimi808.xo.common.*;
 import com.akimi808.xo.server.MessageReader;
-import com.akimi808.xo.server.Player;
 
 /**
  * @author Andrey Larionov
@@ -25,7 +24,7 @@ public class XoClient2 {
         try {
             SocketChannel socket = SocketChannel.open(new InetSocketAddress("localhost", 2810));
             socket.configureBlocking(false);
-            processor = new SocketProcessor(socket);
+            processor = new SocketProcessor(socket, outboundQueue);
             processor.start();
         } catch (IOException e) {
             e.printStackTrace();
@@ -33,8 +32,6 @@ public class XoClient2 {
     }
 
     public void login(String name) {
-        Request tryToLogIn = new Request(0, "tryToLogIn", new Type[]{Type.STRING}, new Object[]{name});
-        
     }
 
     public List<Update> getUpdates() {
@@ -60,8 +57,9 @@ public class XoClient2 {
         private final Queue<Message> outboundQueue;
         private boolean writeComplete;
 
-        public SocketProcessor(SocketChannel socket) {
+        public SocketProcessor(SocketChannel socket, Queue<Message> outboundQueue) {
             this.socket = socket;
+            this.outboundQueue = outboundQueue;
         }
 
         @Override
@@ -120,13 +118,31 @@ public class XoClient2 {
         private void writeToSocket() throws IOException {
             boolean shouldSend = !outboundQueue.isEmpty() || !writeComplete;
             if (!shouldSend) {
-                socket.keyFor(writeSelector).cancel();
+                SelectionKey selectionKey = socket.keyFor(writeSelector);
+                if (selectionKey != null) {
+                    selectionKey.cancel();
+                }
             } else {
                 writeComplete = false;
                 socket.register(writeSelector, SelectionKey.OP_WRITE);
             }
             if (writeSelector.selectNow() > 0) {
-                // Do write
+                boolean canWriteMore = true;
+                if (writeBuffer.hasRemaining()) {
+                    socket.write(writeBuffer);
+                    canWriteMore = !writeBuffer.hasRemaining();
+                }
+                while (canWriteMore && outboundQueue.size() > 0) {
+                    Message message = outboundQueue.poll();
+                    int writen = message.write(writeBuffer);
+                    writeBuffer.flip();
+                    socket.write(writeBuffer);
+                    canWriteMore = !writeBuffer.hasRemaining();
+                    if (canWriteMore) {
+                        writeBuffer.clear();
+                    }
+                }
+                writeComplete = canWriteMore;
             }
         }
     }

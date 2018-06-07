@@ -1,6 +1,7 @@
 package com.akimi808.xo.common;
 
 import java.io.UnsupportedEncodingException;
+import java.nio.ByteBuffer;
 
 import com.akimi808.xo.server.Client;
 import com.akimi808.xo.server.SocketProcessor;
@@ -72,4 +73,6 @@ public abstract class Message {
     }
 
     abstract public void handle(Handler handler, Client client);
+
+    public abstract int write(ByteBuffer writeBuffer);
 }
