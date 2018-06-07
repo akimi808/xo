@@ -1,5 +1,8 @@
 package com.akimi808.xo.server;
 
+import com.akimi808.xo.common.Message;
+import com.akimi808.xo.common.RingBuffer;
+
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
@@ -11,31 +14,37 @@ import java.util.Queue;
  * Created by akimi808 on 25/03/2018.
  */
 public class MessageWriter {
-    private Queue<String> outboundResponses = new ArrayDeque<>();
-    private int currentWritten = 0;
-    private int currentSize = 0;
-    private byte[] messageTextBytes;
+    private Queue<Message> outboundResponses = new ArrayDeque<>();
+    private RingBuffer buffer = new RingBuffer(2048);
 
     public void writeToSocket(SocketChannel socketChannel, ByteBuffer writeBuffer) throws IOException {
-        if (currentSize <= currentWritten) {
-            String messageText = outboundResponses.poll();
-            messageTextBytes = messageText != null ? (messageText + "\n").getBytes() : null;
-            currentSize = messageTextBytes != null ? messageTextBytes.length : 0;
-            currentWritten = 0;
-        }
-        if (messageTextBytes != null) {
-            writeBuffer.put(messageTextBytes, currentWritten, messageTextBytes.length - currentWritten);
-            writeBuffer.flip();
-            currentWritten += socketChannel.write(writeBuffer);
+        while (true) {
+            if (buffer.available() == 0 && outboundResponses.isEmpty()) {
+                break;
+            }
+            if (buffer.available() > 0) {
+                buffer.readToByteBuffer(writeBuffer);
+            }
+
+            final Message message = outboundResponses.poll();
+            if (message != null) {
+                message.write(writeBuffer);
+            }
+
+            socketChannel.write(writeBuffer);
+            if (writeBuffer.remaining() > 0) {
+                buffer.writeFromByteBuffer(writeBuffer);
+                break;
+            }
         }
     }
 
-    public void enqueue(String response) {
-        outboundResponses.offer(response);
+    public void enqueue(Message message) {
+        outboundResponses.offer(message);
     }
 
     public boolean isComplete() {
-        return currentWritten == currentSize && outboundResponses.isEmpty();
+        return buffer.available() == 0 && outboundResponses.isEmpty();
     }
 
 }

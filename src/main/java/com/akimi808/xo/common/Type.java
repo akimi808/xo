@@ -1,5 +1,8 @@
 package com.akimi808.xo.common;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import java.nio.ByteBuffer;
 
 /**
@@ -8,8 +11,17 @@ import java.nio.ByteBuffer;
 public enum Type {
     BYTE,
     INTEGER,
-    STRING
+    STRING,
+    BOOLEAN,
     ;
+
+    private static final Map<Class<?>, Type> classesToTypes = new HashMap<>();
+    static {
+        classesToTypes.put(String.class, Type.STRING);
+        classesToTypes.put(Byte.class, Type.BYTE);
+        classesToTypes.put(Integer.class, Type.INTEGER);
+        classesToTypes.put(Boolean.class, Type.BOOLEAN);
+    }
 
     public static Type valueOf(byte repr) {
         for (Type type : Type.values()) {
@@ -28,6 +40,8 @@ public enum Type {
             return Message.readString(buffer);
         case INTEGER:
             return Message.readInteger(buffer);
+        case BOOLEAN:
+            return Message.readByte(buffer) > 0;
         }
         throw new RuntimeException();
     }
@@ -53,6 +67,15 @@ public enum Type {
             return String.class;
         case INTEGER:
             return Integer.class;
+        case BOOLEAN:
+            return Boolean.class;
+        }
+        throw new RuntimeException();
+    }
+
+    public static Type fromClass(Class<?> clazz) {
+        if (classesToTypes.containsKey(clazz)) {
+            return classesToTypes.get(clazz);
         }
         throw new RuntimeException();
     }

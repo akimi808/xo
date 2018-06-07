@@ -11,17 +11,19 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Created by akimi808 on 19/02/2018.
  */
-public class SocketProcessor implements Runnable, Handler {
+public class SocketProcessor implements Runnable {
     private Queue<Client> clientQueue;
     private Selector readSelector;
     private Selector writeSelector;
     private static final Logger log = LogManager.getLogger(SocketProcessor.class);
     private Set<SelectionKey> keysToCancel = new HashSet<>();
     private Dispatcher dispatcher;
+    private AtomicInteger sessionSeq = new AtomicInteger(0);
 
 
     public SocketProcessor(Queue<Client> clientQueue, Dispatcher dispatcher) throws IOException {
@@ -39,11 +41,7 @@ public class SocketProcessor implements Runnable, Handler {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+            Thread.yield();
         }
     }
 
@@ -61,6 +59,9 @@ public class SocketProcessor implements Runnable, Handler {
                     SocketChannel socketChannel = client.getSocketChannel();
                     SelectionKey key = socketChannel.register(readSelector, SelectionKey.OP_READ);
                     key.attach(client);
+                    int sessionId = sessionSeq.incrementAndGet();
+                    client.getMessageWriter().enqueue(new UpdateSessionInitiated(sessionId));
+                    client.setSessionId(sessionId);
                 } catch (ClosedChannelException e) {
                     e.printStackTrace();
                 }
@@ -89,7 +90,7 @@ public class SocketProcessor implements Runnable, Handler {
                     List<Message> requests = messageReader.decodeMessage(byteBuffer);
                     for (Iterator<Message> iterator = requests.iterator(); iterator.hasNext(); ) {
                         Message message = iterator.next();
-                        message.handle(this, client);
+                        message.handle(new ClientMessageHandler(client, this));
                         iterator.remove();
                     }
                 }
@@ -130,7 +131,6 @@ public class SocketProcessor implements Runnable, Handler {
         dispatcher.dispatch(request, client);
     }
 
-    @Override
     public void handleResponse(Response response, Client client) {
 
     }

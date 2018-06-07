@@ -16,11 +16,15 @@ public class Game {
     private Mark markToMove = Mark.X;
     private final String opponentName;
     private final Mark[] field = new Mark[9];
+    private boolean started;
+    private boolean finished;
 
     public Game(Integer gameId, Mark mark, String opponentName) {
         this.gameId = gameId;
         this.mark = mark;
         this.opponentName = opponentName;
+        this.started = false;
+        this.finished = false;
     }
 
     public Integer getGameId() {
@@ -28,30 +32,14 @@ public class Game {
     }
 
     public boolean isFinished() {
-        for (int i = 1; i <= 7; i += 3) {
-            if (field[i] != null && field[i] == field[i + 1] && field[i + 1] == field[i + 2]) {
-                return true;
-            }
-        }
-        for (int i = 1; i <= 3; i += 1) {
-            if (field[i] != null && field[i] == field[i + 3] && field[i + 3] == field[i + 6]) {
-                return true;
-            }
-        }
-        if (field[1] != null && field[1] == field[5] && field[5] == field[9]) {
-            return true;
-        }
-        if (field[3] != null && field[3] == field[5] && field[5] == field[7]) {
-            return true;
-        }
-        return Arrays.stream(field).filter(Objects::nonNull).count() == 9;
+        return finished;
     }
 
     public boolean isMyTurn() {
         return markToMove.equals(mark);
     }
 
-    public void doMove(Mark mark, Integer placedPosition) {
+    public void placeMark(Mark mark, Integer placedPosition) {
         field[placedPosition] = mark;
         markToMove = mark.opposite();
     }
@@ -62,5 +50,17 @@ public class Game {
             result.add(i);
         }
         return result;
+    }
+
+    public boolean isStarted() {
+        return started;
+    }
+
+    public void setFinished(boolean finished) {
+        this.finished = finished;
+    }
+
+    public void setTurnMark(Mark turnMark) {
+        markToMove = turnMark;
     }
 }

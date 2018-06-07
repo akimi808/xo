@@ -7,10 +7,12 @@ import com.akimi808.xo.common.Mark;
  */
 public class Player {
     private String name;
+    private Client client;
     private Mark type;
 
-    public Player(String name) {
+    public Player(String name, Client client) {
         this.name = name;
+        this.client = client;
         this.type = type;
     }
 

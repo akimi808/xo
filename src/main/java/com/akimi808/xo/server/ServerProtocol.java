@@ -1,5 +1,9 @@
 package com.akimi808.xo.server;
 
+import com.akimi808.xo.common.PlayerInfo;
+import com.akimi808.xo.common.UpdateGameFinished;
+import com.akimi808.xo.common.UpdateGameStarted;
+import com.akimi808.xo.common.UpdateGameTurnChanged;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -9,17 +13,40 @@ import org.apache.logging.log4j.Logger;
 public class ServerProtocol {
     private static final Logger log = LogManager.getLogger(ServerProtocol.class);
     public ServerState serverState = ServerState.INTRO;
-    public XoServer xoServer;
     private Game game;
     private Player player;
-    private Client client;
     private GameManager gameManager;
 
-    public ServerProtocol(Client client, GameManager gameManager) {
-        this.client = client;
+    public ServerProtocol(GameManager gameManager) {
         this.gameManager = gameManager;
     }
 
+    public PlayerInfo login(Client client, String name) {
+        game = gameManager.registerNewPlayer(new Player(name, client));
+        if (game.hasSecondPlayer()) {
+            client.getMessageWriter().enqueue(new UpdateGameStarted(client.getSessionId()));
+        }
+        return new PlayerInfo();
+    }
+
+    public Boolean makeMove(Client client, Integer gameId, Integer move) {
+        MoveResult moveResult = game.processMove(move, player);
+        MessageWriter messageWriter = client.getMessageWriter();
+        switch (moveResult) {
+            case DRAW:
+            case GAME_OVER:
+                messageWriter.enqueue(new UpdateGameFinished(client.getSessionId()));
+                return true;
+            case CHANGE_TURN:
+                messageWriter.enqueue(new UpdateGameTurnChanged(client.getSessionId(), game.getTurnMark()));
+                return true;
+            case INVALID_MOVE:
+                return false;
+        }
+        throw new RuntimeException();
+   }
+
+/*
     public String processMessage(String line) {
         switch (serverState) {
             case INTRO:
@@ -104,6 +131,7 @@ public class ServerProtocol {
         }
         return null;
     }
+*/
 
     private int extractPlayersMove(String line) {
         return Integer.parseInt(line.substring("My move ".length() + 1));
@@ -114,9 +142,6 @@ public class ServerProtocol {
         return message.substring("Player's name".length() + 1);
     }
 
-    public ServerState getServerState() {
-        return serverState;
-    }
 
 }
 

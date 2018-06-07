@@ -3,8 +3,6 @@ package com.akimi808.xo.common;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
-import com.akimi808.xo.server.Client;
-
 /**
  * Created by akimi808 on 22/02/2018.
  */
@@ -15,11 +13,18 @@ public class Request extends Message {
     private final Type[] parameterTypes;
     private final Object[] parameterValues;
 
-    public Request(Integer requestId, String methodName, Type[] parameterTypes, Object[] parameterValues) {
+    public Request(Integer sessionId, Integer requestId, String methodName,
+                   Type[] parameterTypes, Object[] parameterValues)
+    {
+        super(sessionId);
         this.requestId = requestId;
         this.methodName = methodName;
         this.parameterTypes = parameterTypes;
         this.parameterValues = parameterValues;
+    }
+
+    public Integer getRequestId() {
+        return requestId;
     }
 
     public String getMethodName() {
@@ -34,17 +39,17 @@ public class Request extends Message {
         return parameterValues;
     }
 
-    public static Message read(ByteBuffer buffer) {
+    public static Message read(Integer sessionId, ByteBuffer buffer) {
         Integer requestId = readRequestId(buffer);
         String methodName = readMethodName(buffer);
         Type[] parameterTypes = readParameterTypes(buffer);
         Object[] parameterValues = readParameterValues(buffer, parameterTypes);
-        return new Request(requestId, methodName, parameterTypes, parameterValues);
+        return new Request(sessionId, requestId, methodName, parameterTypes, parameterValues);
     }
 
     @Override
-    public void handle(Handler handler, Client client) {
-        handler.handleRequest(this, client);
+    public void handle(Handler handler) {
+        handler.handleRequest(this);
     }
 
     @Override
@@ -86,25 +91,6 @@ public class Request extends Message {
 
     private void writeMethodName(ByteBuffer buffer) {
         Message.writeString(methodName, buffer);
-    }
-
-    private static Object[] readParameterValues(ByteBuffer buffer, Type[] parameterTypes) {
-        Object[] values = new Object[parameterTypes.length];
-        for (int i = 0; i < parameterTypes.length; i++) {
-            Type type = parameterTypes[i];
-            values[i] = type.readValue(buffer);
-        }
-        return values;
-    }
-
-    private static Type[] readParameterTypes(ByteBuffer buffer) {
-        short parametersLen = readShort(buffer);
-        Type[] types = new Type[parametersLen];
-        for (short i = 0; i < parametersLen; i++) {
-            byte repr = readByte(buffer);
-            types[i] = Type.valueOf(repr);
-        }
-        return types;
     }
 
     private static Integer readRequestId(ByteBuffer buffer) {

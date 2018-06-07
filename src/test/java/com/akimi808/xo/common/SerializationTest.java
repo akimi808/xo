@@ -16,7 +16,7 @@ public class SerializationTest {
     @Test
     public void testSerializeSimpleRequest() throws Exception {
         ByteBuffer buffer = ByteBuffer.allocate(1024);
-        Request request = new Request(1, "methodName", new Type[0], new Object[0]);
+        Request request = new Request(1, 1,"methodName", new Type[0], new Object[0]);
         request.write(buffer);
         byte[] expected = {0, 21,
                 1,
@@ -34,7 +34,7 @@ public class SerializationTest {
         ByteBuffer buffer = ByteBuffer.allocate(1024);
         Type[] types = {Type.INTEGER, Type.STRING};
         Object[] values = {768345, "two words"};
-        Request request = new Request(1, "methodWithArguments", types, values);
+        Request request = new Request(1, 1,"methodWithArguments", types, values);
         request.write(buffer);
         byte[] expected = {0, 47,
                 1,

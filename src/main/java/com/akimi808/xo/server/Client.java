@@ -10,11 +10,12 @@ public class Client {
     private MessageReader messageReader = new MessageReader();
     private ServerProtocol serverProtocol;
     private MessageWriter messageWriter = new MessageWriter();
+    private int sessionId;
 
 
     public Client(SocketChannel socketChannel, XoServer xoServer, GameManager gameManager) {
         this.socketChannel = socketChannel;
-        this.serverProtocol = new ServerProtocol(this, gameManager);
+        this.serverProtocol = new ServerProtocol(gameManager);
     }
 
     public SocketChannel getSocketChannel() {
@@ -31,5 +32,13 @@ public class Client {
 
     public MessageWriter getMessageWriter() {
         return messageWriter;
+    }
+
+    public void setSessionId(int sessionId) {
+        this.sessionId = sessionId;
+    }
+
+    public Integer getSessionId() {
+        return sessionId;
     }
 }

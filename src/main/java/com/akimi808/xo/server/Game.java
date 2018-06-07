@@ -102,4 +102,8 @@ public class Game {
             return firstPlayer.getName();
         }
     }
+
+    public Mark getTurnMark() {
+        return turn;
+    }
 }

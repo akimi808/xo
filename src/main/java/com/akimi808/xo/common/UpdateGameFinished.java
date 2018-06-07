@@ -1,6 +1,10 @@
 package com.akimi808.xo.common;
 
 public class UpdateGameFinished extends Update {
+    public UpdateGameFinished(Integer sessionId) {
+        super(sessionId);
+    }
+
     public Integer getGameId() {
         return null;
     }
