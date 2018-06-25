@@ -74,5 +74,33 @@ public abstract class Message {
 
     abstract public void handle(Handler handler, Client client);
 
-    public abstract int write(ByteBuffer writeBuffer);
+    public void write(ByteBuffer buffer) {
+        short len = getSizeInBytes();
+        byte type = getType();
+        buffer.putShort(len);
+        buffer.put(type);
+        writeBody(buffer);
+    }
+
+    protected abstract byte getType();
+
+
+    protected short getSizeInBytes() {
+        return (short) (getHeaderSize() + getBodySize());
+    }
+
+    protected abstract short getBodySize();
+
+    private short getHeaderSize(){
+        return 3;
+    }
+
+
+    protected abstract void writeBody(ByteBuffer buffer);
+
+    public static void writeString(String value, ByteBuffer buffer) {
+        byte[] bytes = value.getBytes();
+        buffer.putShort((short) bytes.length);
+        buffer.put(bytes);
+    }
 }

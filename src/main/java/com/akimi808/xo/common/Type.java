@@ -1,5 +1,7 @@
 package com.akimi808.xo.common;
 
+import java.nio.ByteBuffer;
+
 /**
  * @author Andrey Larionov
  */
@@ -30,6 +32,19 @@ public enum Type {
         throw new RuntimeException();
     }
 
+    public short getValueSize(Object value) {
+        switch (this) {
+            case BYTE:
+                return 1;
+            case INTEGER:
+                return 4;
+            case STRING:
+                String stringValue = (String) value;
+                return (short) (2 + stringValue.getBytes().length);
+        }
+        throw new RuntimeException();
+    }
+
     public Class<?> toClass() {
         switch (this) {
         case BYTE:
@@ -40,5 +55,19 @@ public enum Type {
             return Integer.class;
         }
         throw new RuntimeException();
+    }
+
+    public void writeValue(Object value, ByteBuffer buffer) {
+        switch (this) {
+            case BYTE:
+                buffer.put((byte)value);
+                break;
+            case INTEGER:
+                buffer.putInt((Integer) value);
+                break;
+            case STRING:
+                Message.writeString((String)value, buffer);
+                break;
+        }
     }
 }

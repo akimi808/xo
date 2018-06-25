@@ -10,6 +10,7 @@ import java.nio.channels.SocketChannel;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Queue;
+import java.util.concurrent.ArrayBlockingQueue;
 
 import com.akimi808.xo.common.*;
 import com.akimi808.xo.server.MessageReader;
@@ -54,7 +55,7 @@ public class XoClient2 {
         private final ByteBuffer readBuffer = ByteBuffer.allocate(2048);
         private final ByteBuffer writeBuffer = ByteBuffer.allocate(2048);
         private final MessageReader messageReader = new MessageReader();
-        private final Queue<Message> outboundQueue;
+        private final Queue<Message> outboundQueue = new ArrayBlockingQueue<Message>(100);
         private boolean writeComplete;
 
         public SocketProcessor(SocketChannel socket, Queue<Message> outboundQueue) {
@@ -78,8 +79,12 @@ public class XoClient2 {
             }
 
             while (!terminate) {
-                readFromSocket();
-                writeToSocket();
+                try {
+                    readFromSocket();
+                    writeToSocket();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
 
             try {
