@@ -25,6 +25,7 @@ public class XoClient2 {
         try {
             SocketChannel socket = SocketChannel.open(new InetSocketAddress("localhost", 2810));
             socket.configureBlocking(false);
+            Queue<Message> outboundQueue = new ArrayBlockingQueue<Message>(100);
             processor = new SocketProcessor(socket, outboundQueue);
             processor.start();
         } catch (IOException e) {
@@ -55,7 +56,7 @@ public class XoClient2 {
         private final ByteBuffer readBuffer = ByteBuffer.allocate(2048);
         private final ByteBuffer writeBuffer = ByteBuffer.allocate(2048);
         private final MessageReader messageReader = new MessageReader();
-        private final Queue<Message> outboundQueue = new ArrayBlockingQueue<Message>(100);
+        private final Queue<Message> outboundQueue;
         private boolean writeComplete;
 
         public SocketProcessor(SocketChannel socket, Queue<Message> outboundQueue) {
@@ -139,7 +140,7 @@ public class XoClient2 {
                 }
                 while (canWriteMore && outboundQueue.size() > 0) {
                     Message message = outboundQueue.poll();
-                    int writen = message.write(writeBuffer);
+                    message.write(writeBuffer);
                     writeBuffer.flip();
                     socket.write(writeBuffer);
                     canWriteMore = !writeBuffer.hasRemaining();

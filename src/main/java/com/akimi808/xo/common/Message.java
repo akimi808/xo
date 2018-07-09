@@ -10,28 +10,26 @@ import com.akimi808.xo.server.SocketProcessor;
  * @author Andrey Larionov
  */
 public abstract class Message {
-    public static boolean hasComplete(RingBuffer buffer) {
+    public static boolean hasComplete(ByteBuffer buffer) {
         boolean hasComplete = false;
         buffer.mark();
         short messageLen = readShort(buffer);
-        hasComplete = buffer.available() < messageLen;
+        hasComplete = buffer.limit() - buffer.position() < messageLen;
         buffer.reset();
         return hasComplete;
     }
 
-    protected static short readShort(RingBuffer buffer) {
-        final byte low = buffer.take();
-        final byte high = buffer.take();
-        return (short) ((low & 0xFF) | ((high & 0xFF) << 8));
+    protected static short readShort(ByteBuffer buffer) {
+        return buffer.getShort();
     }
 
-    public static Message read(RingBuffer buffer) {
+    public static Message read(ByteBuffer buffer) {
         short messageLen = readShort(buffer);
         byte messageType = readByte(buffer);
         return readMessageByType(messageType, buffer);
     }
 
-    private static Message readMessageByType(byte messageType, RingBuffer buffer) {
+    private static Message readMessageByType(byte messageType, ByteBuffer buffer) {
         switch (messageType) {
             case Request.TYPE:
                 return Request.read(buffer);
@@ -43,14 +41,14 @@ public abstract class Message {
         throw new RuntimeException();
     }
 
-    public static byte readByte(RingBuffer buffer) {
-        return buffer.take();
+    public static byte readByte(ByteBuffer buffer) {
+        return buffer.get();
     }
 
-    public static String readString(RingBuffer buffer) {
+    public static String readString(ByteBuffer buffer) {
         short stringLen = readShort(buffer);
         byte[] stringBytes = new byte[stringLen];
-        buffer.take(stringBytes, stringLen);
+        buffer.get(stringBytes);
         String string = null;
         try {
             string = new String(stringBytes, "UTF-8");
@@ -61,10 +59,10 @@ public abstract class Message {
     }
 
     public static Integer readInteger(RingBuffer buffer) {
-        byte i1 = buffer.take();
-        byte i2 = buffer.take();
-        byte i3 = buffer.take();
         byte i4 = buffer.take();
+        byte i3 = buffer.take();
+        byte i2 = buffer.take();
+        byte i1 = buffer.take();
         return (
                 (i1 & 0xFF) |
                 ((i2 & 0xFF) << 8) |

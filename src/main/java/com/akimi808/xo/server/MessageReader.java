@@ -15,6 +15,7 @@ import com.akimi808.xo.common.RingBuffer;
 public class MessageReader {
 
     private ArrayList<Message> listOfRequests = new ArrayList<>();
+    private ByteBuffer byteBuffer = ByteBuffer.allocate(2048);
     private RingBuffer buffer = new RingBuffer(2048);
 
     public List<Message> decodeMessage(ByteBuffer readBytes) {
@@ -23,8 +24,8 @@ public class MessageReader {
                 // Out of capacity
                 throw new RuntimeException();
             };
-            if (Message.hasComplete(buffer)) {
-                listOfRequests.add(Message.read(buffer));
+            if (Message.hasComplete(byteBuffer)) {
+                listOfRequests.add(Message.read(byteBuffer));
             }
         }
         readBytes.clear();

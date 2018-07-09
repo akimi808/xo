@@ -15,4 +15,19 @@ public class Update extends Message {
         handler.handleUpdate(this, client);
     }
 
+    @Override
+    protected byte getType() {
+        return 0;
+    }
+
+    @Override
+    protected short getBodySize() {
+        return 0;
+    }
+
+    @Override
+    protected void writeBody(ByteBuffer buffer) {
+
+    }
+
 }
