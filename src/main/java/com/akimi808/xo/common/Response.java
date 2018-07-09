@@ -29,23 +29,23 @@ public class Response extends Message {
         return TYPE;
     }
 
-    public static Message read(RingBuffer buffer) {
+    public static Message read(ByteBuffer buffer) {
         Integer responseId = readResponseId(buffer);
         Type responseType = readType(buffer);
         Object responseValue = readValue(buffer, responseType);
         return new Response(responseId, responseType, responseValue);
     }
 
-    private static Object readValue(RingBuffer buffer, Type responseType) {
+    private static Object readValue(ByteBuffer buffer, Type responseType) {
         return responseType.readValue(buffer);
     }
 
-    private static Type readType(RingBuffer buffer) {
+    private static Type readType(ByteBuffer buffer) {
             byte repr = readByte(buffer);
             return Type.valueOf(repr);
     }
 
-    private static Integer readResponseId(RingBuffer buffer) {
+    private static Integer readResponseId(ByteBuffer buffer) {
         return readInteger(buffer);
     }
 

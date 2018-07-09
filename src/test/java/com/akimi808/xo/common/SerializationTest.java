@@ -1,17 +1,11 @@
-package com.akimi808.xo.server;
+package com.akimi808.xo.common;
 
 import com.akimi808.xo.common.Message;
 import com.akimi808.xo.common.Request;
-import com.akimi808.xo.common.RingBuffer;
 import com.akimi808.xo.common.Type;
-import com.sun.tools.internal.xjc.reader.Ring;
 import org.junit.Test;
 
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
 
 import static org.junit.Assert.*;
 
@@ -61,17 +55,17 @@ public class SerializationTest {
 
     @Test
     public void testDeserializeSimpleRequest() {
-        RingBuffer ringBuffer = new RingBuffer(1024);
+        ByteBuffer byteBuffer = ByteBuffer.allocate(1024);
         byte[] expected = {0, 21,
                 1,
                 0, 0, 0, 1,
                 0, 10, 109, 101, 116, 104, 111, 100, 78, 97, 109, 101,
                 0, 0};
         for (int i = 0; i < expected.length; i++) {
-            ringBuffer.put(expected[i]);
-
+            byteBuffer.put(expected[i]);
         }
-        Message message = Message.read(ringBuffer);
+        byteBuffer.flip();
+        Message message = Message.read(byteBuffer);
         Request request = new Request(1, "methodName", new Type[0], new Object[0]);
         assertEquals(message, request);
 

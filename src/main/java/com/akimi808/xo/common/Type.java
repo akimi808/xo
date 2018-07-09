@@ -20,7 +20,7 @@ public enum Type {
         throw new RuntimeException();
     }
 
-    public Object readValue(RingBuffer buffer) {
+    public Object readValue(ByteBuffer buffer) {
         switch (this) {
         case BYTE:
             return Message.readByte(buffer);

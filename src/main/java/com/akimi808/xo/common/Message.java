@@ -4,7 +4,6 @@ import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 
 import com.akimi808.xo.server.Client;
-import com.akimi808.xo.server.SocketProcessor;
 
 /**
  * @author Andrey Larionov
@@ -58,11 +57,11 @@ public abstract class Message {
         return string;
     }
 
-    public static Integer readInteger(RingBuffer buffer) {
-        byte i4 = buffer.take();
-        byte i3 = buffer.take();
-        byte i2 = buffer.take();
-        byte i1 = buffer.take();
+    public static Integer readInteger(ByteBuffer buffer) {
+        byte i4 = buffer.get();
+        byte i3 = buffer.get();
+        byte i2 = buffer.get();
+        byte i1 = buffer.get();
         return (
                 (i1 & 0xFF) |
                 ((i2 & 0xFF) << 8) |

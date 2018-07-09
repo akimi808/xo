@@ -34,7 +34,7 @@ public class Request extends Message {
         return parameterValues;
     }
 
-    public static Message read(RingBuffer buffer) {
+    public static Message read(ByteBuffer buffer) {
         Integer requestId = readRequestId(buffer);
         String methodName = readMethodName(buffer);
         Type[] parameterTypes = readParameterTypes(buffer);
@@ -88,7 +88,7 @@ public class Request extends Message {
         Message.writeString(methodName, buffer);
     }
 
-    private static Object[] readParameterValues(RingBuffer buffer, Type[] parameterTypes) {
+    private static Object[] readParameterValues(ByteBuffer buffer, Type[] parameterTypes) {
         Object[] values = new Object[parameterTypes.length];
         for (int i = 0; i < parameterTypes.length; i++) {
             Type type = parameterTypes[i];
@@ -97,7 +97,7 @@ public class Request extends Message {
         return values;
     }
 
-    private static Type[] readParameterTypes(RingBuffer buffer) {
+    private static Type[] readParameterTypes(ByteBuffer buffer) {
         short parametersLen = readShort(buffer);
         Type[] types = new Type[parametersLen];
         for (short i = 0; i < parametersLen; i++) {
@@ -107,11 +107,11 @@ public class Request extends Message {
         return types;
     }
 
-    private static Integer readRequestId(RingBuffer buffer) {
+    private static Integer readRequestId(ByteBuffer buffer) {
         return readInteger(buffer);
     }
 
-    private static String readMethodName(RingBuffer buffer) {
+    private static String readMethodName(ByteBuffer buffer) {
         return readString(buffer);
     }
 
